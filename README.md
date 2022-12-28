@@ -1,4 +1,4 @@
-# Getting Started with Create React App
+# OpenAI GPT Text GUI
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app), using the Typescript template.
 
