@@ -1,5 +1,6 @@
-import axios from "axios";
 import * as React from "react";
+import { PromptForm } from "./components/PromptForm";
+import { ResponseText } from "./components/ResponseText";
 
 export const useLog = (label: string, value: any) => {
   React.useEffect(() => {
@@ -7,20 +8,11 @@ export const useLog = (label: string, value: any) => {
   }, [value]);
 };
 
-function App() {
-  const [prompt, setPrompt] = React.useState("");
-  const [maxTokens, setMaxTokens] = React.useState(250);
-  const [resText, setResText] = React.useState("");
-  const [loading, setLoading] = React.useState(false);
+export type StateSetter<T> = React.Dispatch<React.SetStateAction<T>>;
 
-  const submitPrompt = async () => {
-    setLoading(true);
-    await axios.post("/ai", { prompt, maxTokens }).then((res) => {
-      console.log({ data: res.data });
-      setLoading(false);
-      setResText(res.data.text);
-    });
-  };
+function App() {
+  const [resText, setResText] = React.useState("");
+  const [isLoading, setIsLoading] = React.useState(false);
 
   return (
     <div className="w-screen flex">
@@ -32,48 +24,17 @@ function App() {
             length and click GET.
           </p>
         </div>
-        <form
-          className="flex flex-col items-start p-4 gap-4 w-full"
-          onSubmit={(e) => {
-            e.preventDefault();
-            submitPrompt();
-          }}
-        >
-          <textarea
-            className="border p-1 w-full h-32 flex-shrink-0"
-            placeholder="write prompt here"
-            value={prompt}
-            onChange={(e) => {
-              setPrompt(e.target.value);
-            }}
-          />
-          <label className="flex flex-col">
-            <span className="mr-2">Response length: {maxTokens}</span>
-            <input
-              type="range"
-              value={maxTokens}
-              min={100}
-              max={950}
-              step={50}
-              onChange={(e) => {
-                setMaxTokens(+e.target.value);
-              }}
-            />
-          </label>
-
-          <button
-            className={`border p-1 px-4 ${loading ? "disabled" : ""}`}
-            type="submit"
-          >
-            {loading ? "..." : "GET"}
-          </button>
-        </form>
+        <PromptForm
+          setResText={setResText}
+          isLoading={isLoading}
+          setIsLoading={setIsLoading}
+        />
       </div>
-      <div className="w-1/2">
-        <p className="whitespace-pre-wrap indent-2">
-          {loading ? "Loading..." : resText}
-        </p>
-      </div>
+      {isLoading ? (
+        <p className="p-4">"Loading..."</p>
+      ) : (
+        <ResponseText text={resText} />
+      )}
     </div>
   );
 }
