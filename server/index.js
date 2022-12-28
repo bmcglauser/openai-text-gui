@@ -4,7 +4,7 @@ const cors = require("cors");
 const app = express();
 require("dotenv").config();
 
-const PORT = process.env.PORT || 4001;
+const PORT = process.env.PORT ?? 4001;
 const API_KEY = process.env.OPENAI_API_KEY;
 
 const { Configuration, OpenAIApi } = require("openai");
@@ -16,30 +16,37 @@ app.use(cors());
 app.use(express.static(path.resolve(__dirname, "../client/build")));
 app.use("/ai", async (req, res) => {
   try {
-    const prompt = req.body.prompt;
-    const maxTokens = req.body.maxTokens ?? 256;
+    const prompt = req.body?.prompt;
+    const isValidModel = /[texcod]{4}\-[a-z]+\-00\d/.test(req.body?.model);
+    const model = isValidModel ? req.body.model : "text-davinci-001";
+    const maxTokens = req.body?.maxTokens ?? 256;
+    const temperature = req.body?.temperature ?? 0.7;
+    const topP = req.body?.topP ?? 1;
+    const frequencyPenalty = req.body?.frequencyPenalty ?? 0.49;
+    const presencePenalty = req.body?.presencePenalty ?? 0;
+
     const configuration = new Configuration({
       apiKey: API_KEY,
     });
     const openai = new OpenAIApi(configuration);
     const response = await openai.createCompletion({
-      model: "text-davinci-003",
+      model,
       prompt,
-      temperature: 0,
+      temperature,
       max_tokens: maxTokens,
-      top_p: 1,
-      frequency_penalty: 0,
-      presence_penalty: 0,
+      top_p: topP,
+      frequency_penalty: frequencyPenalty,
+      presence_penalty: presencePenalty,
     });
 
     res.status(200).send(
       JSON.stringify({
-        text: response.data.choices[0].text,
+        text: response?.data?.choices?.[0]?.text ?? "",
+        tokensUsed: response?.data?.usage?.total_tokens ?? "error",
       })
     );
   } catch (error) {
-    console.error(error);
-    res.status(500, error.message);
+    res.status(500, error?.message);
   }
 });
 app.get("*", (req, res) => {
